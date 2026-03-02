@@ -67,8 +67,21 @@ function calculateMidCloudRetreatBonus(hourlyMidCloud, currentIdx) {
 
 /**
  * 核心算法：计算平流雾形成概率
+ * @param {object} current - 当前气象数据（实时模式）
+ * @param {object} hourly - 逐时气象数据
+ * @param {number} [targetIdx] - 指定小时索引（历史模式），省略则自动匹配当前时间
  */
-export function calculateFogProbability(current, hourly) {
+export function calculateFogProbability(current, hourly, targetIdx) {
+  if (targetIdx !== undefined && hourly) {
+    current = {
+      temperature_2m: hourly.temperature_2m[targetIdx],
+      dew_point_2m: hourly.dew_point_2m[targetIdx],
+      relative_humidity_2m: hourly.relative_humidity_2m[targetIdx],
+      wind_speed_10m: hourly.wind_speed_10m[targetIdx],
+      wind_direction_10m: hourly.wind_direction_10m ? hourly.wind_direction_10m[targetIdx] : 0
+    }
+  }
+
   const conditions = []
   let probability = 0
 
@@ -165,7 +178,9 @@ export function calculateFogProbability(current, hourly) {
 
   // 定位当前小时在逐时数据中的索引（供因子4-7共用）
   let currentIdx = 0
-  if (hourly && hourly.time) {
+  if (targetIdx !== undefined) {
+    currentIdx = targetIdx
+  } else if (hourly && hourly.time) {
     const now = new Date()
     const nowHour = now.getHours()
     const nowDate = now.getDate()
@@ -323,8 +338,8 @@ export function calculateFogProbability(current, hourly) {
   })
   probability = Math.min(100, probability + midCloudBonus)
 
-  // 计算未来24小时的逐小时概率
-  const hourlyProbabilities = calculateHourlyProbabilities(hourly)
+  // 计算逐小时概率（历史模式从0开始，实时模式从当前小时开始）
+  const hourlyProbabilities = calculateHourlyProbabilities(hourly, targetIdx !== undefined ? 0 : undefined)
 
   // 确定概率等级
   let level, description, levelText
@@ -353,21 +368,27 @@ export function calculateFogProbability(current, hourly) {
 }
 
 /**
- * 计算未来24小时逐小时的雾概率（从当前小时开始）
+ * 计算逐小时的雾概率
+ * @param {object} hourly - 逐时气象数据
+ * @param {number} [overrideStart] - 强制起始索引（历史模式），省略则自动匹配当前时间
  */
-function calculateHourlyProbabilities(hourly) {
+function calculateHourlyProbabilities(hourly, overrideStart) {
   if (!hourly || !hourly.temperature_2m) return []
 
-  const now = new Date()
-  const currentHour = now.getHours()
-  const currentDate = now.getDate()
   let startIndex = 0
-  
-  for (let i = 0; i < hourly.time.length; i++) {
-    const dataTime = new Date(hourly.time[i])
-    if (dataTime.getHours() === currentHour && dataTime.getDate() === currentDate) {
-      startIndex = i
-      break
+
+  if (overrideStart !== undefined) {
+    startIndex = overrideStart
+  } else {
+    const now = new Date()
+    const currentHour = now.getHours()
+    const currentDate = now.getDate()
+    for (let i = 0; i < hourly.time.length; i++) {
+      const dataTime = new Date(hourly.time[i])
+      if (dataTime.getHours() === currentHour && dataTime.getDate() === currentDate) {
+        startIndex = i
+        break
+      }
     }
   }
 

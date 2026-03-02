@@ -54,6 +54,26 @@
       </view>
     </view>
 
+    <!-- 平流雾形成条件分析 -->
+    <view class="conditions-section card" wx:if="{{analysisConditions}}">
+      <text class="section-title">🔍 平流雾形成条件分析（{{analysisHour}}:00 峰值 {{analysisProbability}}%）</text>
+      <view class="conditions-list">
+        <view 
+          class="condition-item {{item.status}}" 
+          wx:for="{{analysisConditions}}" 
+          wx:key="name"
+        >
+          <view class="condition-icon-wrap">
+            <text class="condition-icon">{{item.icon}}</text>
+          </view>
+          <view class="condition-content">
+            <text class="condition-name">{{item.name}}</text>
+            <text class="condition-detail">{{item.detail}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <!-- 全天概览 -->
     <view class="overview card">
       <text class="section-title">📊 全天概览</text>
@@ -88,16 +108,18 @@
           <text class="th">温差</text>
           <text class="th">湿度</text>
           <text class="th">风速</text>
-          <text class="th">概率</text>
+          <text class="th">V4</text>
+          <text class="th">级别</text>
         </view>
         <view class="table-body">
-          <view class="table-row {{item.riskClass}}" wx:for="{{hourlyList}}" wx:key="time">
+          <view class="table-row {{item.riskClass}}" wx:for="{{hourlyList}}" wx:key="hour">
             <text class="td time">{{item.hour}}:00</text>
             <text class="td">{{item.temp}}°</text>
             <text class="td">{{item.dew}}°</text>
             <text class="td">{{item.diff}}°</text>
             <text class="td">{{item.humidity}}%</text>
             <text class="td">{{item.wind}}</text>
+            <text class="td prob">{{item.prob}}%</text>
             <text class="td risk">{{item.riskIcon}}</text>
           </view>
         </view>

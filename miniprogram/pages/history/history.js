@@ -2,6 +2,7 @@
  * 历史天气查询页
  */
 import { CITIES } from '../../utils/cities'
+import { calculateFogProbability } from '../../utils/fog-calculator'
 
 const ARCHIVE_API = 'https://archive-api.open-meteo.com/v1/archive'
 
@@ -104,7 +105,7 @@ Page({
   fetchHistoryData(lat, lon, date) {
     return new Promise((resolve, reject) => {
       wx.request({
-        url: `${ARCHIVE_API}?latitude=${lat}&longitude=${lon}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m&timezone=Asia/Shanghai`,
+        url: `${ARCHIVE_API}?latitude=${lat}&longitude=${lon}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,cloud_cover_mid&timezone=Asia/Shanghai`,
         method: 'GET',
         timeout: 15000,
         success: (res) => {
@@ -124,93 +125,94 @@ Page({
 
   processData(data, cityName, date) {
     const hourly = data.hourly
-    const hourlyList = []
-    let highRiskCount = 0
-    let mediumRiskCount = 0
-    let peakFogHours = []
-    
-    // 统计数据
     const temps = hourly.temperature_2m
     const dews = hourly.dew_point_2m
     const humidities = hourly.relative_humidity_2m
     const winds = hourly.wind_speed_10m
-    
-    for (let i = 0; i < 24; i++) {
-      const temp = temps[i]
-      const dew = dews[i]
-      const humidity = humidities[i]
-      const windKmh = winds[i]
-      const wind = (windKmh / 3.6).toFixed(1)
-      const diff = (temp - dew).toFixed(1)
-      
-      // 评估风险
+    const hours = Math.min(24, temps.length)
+
+    // 用 V4 算法计算全天逐时概率，找出峰值小时
+    let peakIdx = 0
+    let peakProb = 0
+    const peakResult = calculateFogProbability(null, hourly, 0)
+    const v4Hourly = peakResult.hourlyProbabilities
+
+    let highRiskCount = 0
+    let mediumRiskCount = 0
+    const peakFogHours = []
+    const hourlyList = []
+
+    for (let i = 0; i < hours; i++) {
+      const v4Item = v4Hourly[i]
+      const prob = v4Item ? v4Item.probability : 0
+      const level = v4Item ? v4Item.level : 'low'
+
+      if (prob > peakProb) {
+        peakProb = prob
+        peakIdx = i
+      }
+      if (level === 'high') { highRiskCount++; peakFogHours.push(i) }
+      else if (level === 'medium') { mediumRiskCount++ }
+
       let riskClass = ''
       let riskIcon = '☀️'
-      
-      if (parseFloat(diff) <= 2 && humidity >= 95) {
-        riskClass = 'high-risk'
-        riskIcon = '🌫️'
-        highRiskCount++
-        peakFogHours.push(i)
-      } else if (parseFloat(diff) <= 4 && humidity >= 85) {
-        riskClass = 'medium-risk'
-        riskIcon = '☁️'
-        mediumRiskCount++
-      }
-      
+      if (level === 'high') { riskClass = 'high-risk'; riskIcon = '🌫️' }
+      else if (level === 'medium') { riskClass = 'medium-risk'; riskIcon = '☁️' }
+
       hourlyList.push({
         hour: String(i).padStart(2, '0'),
-        temp: temp.toFixed(1),
-        dew: dew.toFixed(1),
-        diff,
-        humidity,
-        wind,
+        temp: temps[i].toFixed(1),
+        dew: dews[i].toFixed(1),
+        diff: (temps[i] - dews[i]).toFixed(1),
+        humidity: humidities[i],
+        wind: (winds[i] / 3.6).toFixed(1),
+        prob,
         riskClass,
         riskIcon
       })
     }
-    
-    // 计算概览范围
-    const tempRange = `${Math.min(...temps).toFixed(1)}°C ~ ${Math.max(...temps).toFixed(1)}°C`
-    const dewRange = `${Math.min(...dews).toFixed(1)}°C ~ ${Math.max(...dews).toFixed(1)}°C`
-    const humidityRange = `${Math.min(...humidities)}% ~ ${Math.max(...humidities)}%`
-    const windMin = (Math.min(...winds) / 3.6).toFixed(1)
-    const windMax = (Math.max(...winds) / 3.6).toFixed(1)
+
+    // 对峰值小时做完整条件分析
+    const analysis = calculateFogProbability(null, hourly, peakIdx)
+
+    // 概览
+    const tempRange = `${Math.min(...temps.slice(0, hours)).toFixed(1)}°C ~ ${Math.max(...temps.slice(0, hours)).toFixed(1)}°C`
+    const dewRange = `${Math.min(...dews.slice(0, hours)).toFixed(1)}°C ~ ${Math.max(...dews.slice(0, hours)).toFixed(1)}°C`
+    const humidityRange = `${Math.min(...humidities.slice(0, hours))}% ~ ${Math.max(...humidities.slice(0, hours))}%`
+    const windMin = (Math.min(...winds.slice(0, hours)) / 3.6).toFixed(1)
+    const windMax = (Math.max(...winds.slice(0, hours)) / 3.6).toFixed(1)
     const windRange = `${windMin} ~ ${windMax} m/s`
-    
-    // 分析雾况
+
+    // 全天雾况判定
     let fogLevel, fogLevelText, fogIcon, fogDescription
-    
     if (highRiskCount >= 4) {
       fogLevel = 'high'
       fogLevelText = '高发日'
       fogIcon = '🌫️'
-      fogDescription = `当天有${highRiskCount}小时处于高概率状态，极有可能出现平流雾`
+      fogDescription = `当天有 ${highRiskCount} 小时处于高概率状态，极有可能出现平流雾`
     } else if (highRiskCount >= 1 || mediumRiskCount >= 4) {
       fogLevel = 'medium'
       fogLevelText = '可能出现'
       fogIcon = '☁️'
-      fogDescription = `当天有${highRiskCount}小时高概率、${mediumRiskCount}小时中概率，可能出现雾`
+      fogDescription = `当天有 ${highRiskCount} 小时高概率、${mediumRiskCount} 小时中概率`
     } else {
       fogLevel = 'low'
       fogLevelText = '不太可能'
       fogIcon = '☀️'
       fogDescription = '当天气象条件不利于平流雾形成'
     }
-    
-    // 最易成雾时段
+
     let peakFogTime = ''
     if (peakFogHours.length > 0) {
       const start = Math.min(...peakFogHours)
       const end = Math.max(...peakFogHours)
       peakFogTime = `${String(start).padStart(2, '0')}:00 - ${String(end + 1).padStart(2, '0')}:00`
     }
-    
-    // 格式化日期显示
+
     const dateObj = new Date(date)
     const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
     const queryDate = `${date} ${weekDays[dateObj.getDay()]}`
-    
+
     this.setData({
       historyData: data,
       queryCity: cityName,
@@ -224,7 +226,10 @@ Page({
       dewRange,
       humidityRange,
       windRange,
-      hourlyList
+      hourlyList,
+      analysisHour: String(peakIdx).padStart(2, '0'),
+      analysisProbability: analysis.probability,
+      analysisConditions: analysis.conditions
     })
   },
 
