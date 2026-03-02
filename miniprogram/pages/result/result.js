@@ -36,10 +36,15 @@ Page({
       // 生成云量数据
       const { cloudData, cloudTrendList } = this.generateCloudData()
 
+      const latStr = Number(resultData.location.lat).toFixed(4)
+      const lonStr = Number(resultData.location.lon).toFixed(4)
+
       this.setData({
         resultData,
         tempDewDiff,
         windSpeed,
+        latStr,
+        lonStr,
         statusIcon: statusIcons[resultData.prediction.level],
         hourlyDetailList,
         cloudData,

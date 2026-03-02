@@ -3,7 +3,7 @@
   <!-- 位置信息 -->
   <view class="location-header">
     <text class="location-name">{{resultData.location.name}}</text>
-    <text class="coordinates">{{resultData.location.lat.toFixed(4)}}°N, {{resultData.location.lon.toFixed(4)}}°E</text>
+    <text class="coordinates">{{latStr}}°N, {{lonStr}}°E</text>
   </view>
 
   <!-- 雾预测结果 -->

@@ -1,5 +1,5 @@
 /**
- * 平流雾预测算法
+ * 平流雾预测算法 V4
  */
 
 /**
@@ -13,7 +13,6 @@ export function getWindDirection(degrees) {
 
 /**
  * 计算风向稳定性（mean resultant length）
- * 利用圆统计方法衡量风向的一致程度
  * 返回 0~1，1 表示完全一致，0 表示完全无序
  */
 function calculateWindDirectionStability(directions) {
@@ -29,9 +28,8 @@ function calculateWindDirectionStability(directions) {
 }
 
 /**
- * 计算平流蓄积前兆加分
- * 当强风持续输送水汽（高湿度/低温度-露点差），且未来风速将显著减弱时，
- * 意味着蓄积的水汽将在风速降低后快速凝结成雾
+ * 计算平流蓄积前兆加分 (V3)
+ * 强风输送水汽 + 风速即将减弱 → 蓄积水汽将快速凝结
  */
 function calculatePrecursorBonus(windSpeedMs, humidity, tempDewDiff, futureWindSpeedsMs) {
   if (windSpeedMs < 3 || (humidity < 80 && tempDewDiff > 3)) return 0
@@ -42,6 +40,28 @@ function calculatePrecursorBonus(windSpeedMs, humidity, tempDewDiff, futureWindS
 
   if (minFutureWind < 2 && dropRatio >= 0.4) return 8
   if (dropRatio >= 0.3) return 5
+  return 0
+}
+
+/**
+ * 计算中云消退信号加分 (V4)
+ * 过去12小时中云从活跃转为消退，表明中层天气系统撤离，
+ * 大气转入纯低层暖湿平流控制 —— 这是平流雾爆发的典型前兆
+ */
+function calculateMidCloudRetreatBonus(hourlyMidCloud, currentIdx) {
+  if (!hourlyMidCloud || currentIdx < 3) return 0
+
+  const lookback = 12
+  const startIdx = Math.max(0, currentIdx - lookback)
+  const pastMids = hourlyMidCloud.slice(startIdx, currentIdx)
+  if (pastMids.length < 3) return 0
+
+  const avgPastMid = pastMids.reduce((a, b) => a + b, 0) / pastMids.length
+  const currentMid = hourlyMidCloud[currentIdx] || 0
+
+  if (avgPastMid >= 50 && currentMid <= 20) {
+    return avgPastMid >= 70 ? 8 : 5
+  }
   return 0
 }
 
@@ -107,11 +127,11 @@ export function calculateFogProbability(current, hourly) {
   probability += humidityScore
 
   // 3. 风速分析 (权重: 20%)
-  // 注意：Open-Meteo 返回的是 km/h，需转换为 m/s
   const windSpeedKmh = current.wind_speed_10m
   const windSpeed = windSpeedKmh / 3.6
   let windScore = 0
   let windStatus = 'unmet'
+  let windDetail = `当前值: ${windSpeed.toFixed(1)} m/s（理想值: 2-7 m/s）`
 
   if (windSpeed >= 2 && windSpeed <= 7) {
     windScore = 20
@@ -127,49 +147,23 @@ export function calculateFogProbability(current, hourly) {
     windStatus = 'unmet'
   }
 
+  // V4: 饱和气团高风速修正
+  // 当空气已完全饱和（湿度≥95%且T-Td≤1°C），高风速意味着雾气团正在被平流输送
+  if (windSpeed > 7 && humidity >= 95 && tempDewDiff <= 1) {
+    windScore = Math.max(windScore, 18)
+    windStatus = 'met'
+    windDetail += '（饱和气团平流输送中）'
+  }
+
   conditions.push({
     name: '风速条件',
-    detail: `当前值: ${windSpeed.toFixed(1)} m/s（理想值: 2-7 m/s）`,
+    detail: windDetail,
     status: windStatus,
     icon: windStatus === 'met' ? '✓' : windStatus === 'partial' ? '○' : '✗'
   })
   probability += windScore
 
-  // 4. 温度趋势分析 (权重: 10%)
-  let tempTrendScore = 0
-  let tempTrendStatus = 'unmet'
-  let tempTrendDetail = '数据不足'
-
-  if (hourly && hourly.temperature_2m) {
-    const futureTemps = hourly.temperature_2m.slice(0, 6)
-    const tempDrop = futureTemps[0] - Math.min(...futureTemps)
-
-    if (tempDrop >= 2) {
-      tempTrendScore = 10
-      tempTrendStatus = 'met'
-      tempTrendDetail = '温度下降趋势明显，有利于雾形成'
-    } else if (tempDrop >= 1) {
-      tempTrendScore = 7
-      tempTrendStatus = 'partial'
-      tempTrendDetail = '温度趋势平稳'
-    } else if (tempDrop >= 0) {
-      tempTrendScore = 4
-      tempTrendStatus = 'partial'
-      tempTrendDetail = '温度趋势平稳'
-    } else {
-      tempTrendDetail = '温度上升，不利于雾形成'
-    }
-  }
-
-  conditions.push({
-    name: '温度趋势',
-    detail: tempTrendDetail,
-    status: tempTrendStatus,
-    icon: tempTrendStatus === 'met' ? '✓' : tempTrendStatus === 'partial' ? '○' : '✗'
-  })
-  probability += tempTrendScore
-
-  // 定位当前小时在逐时数据中的索引（供因子5、6共用）
+  // 定位当前小时在逐时数据中的索引（供因子4-7共用）
   let currentIdx = 0
   if (hourly && hourly.time) {
     const now = new Date()
@@ -184,8 +178,55 @@ export function calculateFogProbability(current, hourly) {
     }
   }
 
+  // 4. T-Td 收敛趋势分析 (权重: 10%)  [V4: 替换原温度趋势]
+  // 直接衡量未来6小时 T-Td 是否趋向收窄，比单看温度下降更能反映趋向饱和的速度
+  let convergenceScore = 0
+  let convergenceStatus = 'unmet'
+  let convergenceDetail = '数据不足'
+
+  if (hourly && hourly.temperature_2m && hourly.dew_point_2m) {
+    const futureCount = Math.min(6, hourly.temperature_2m.length - currentIdx)
+    if (futureCount >= 2) {
+      const futureDiffs = []
+      for (let j = 0; j < futureCount; j++) {
+        const idx = currentIdx + j
+        futureDiffs.push(hourly.temperature_2m[idx] - hourly.dew_point_2m[idx])
+      }
+      const currentDiff = futureDiffs[0]
+      const minFutureDiff = Math.min(...futureDiffs)
+      const convergence = currentDiff - minFutureDiff
+
+      if (convergence >= 3) {
+        convergenceScore = 10
+        convergenceStatus = 'met'
+        convergenceDetail = `T-Td 将从 ${currentDiff.toFixed(1)} 收窄至 ${minFutureDiff.toFixed(1)}°C，快速趋向饱和`
+      } else if (convergence >= 2) {
+        convergenceScore = 8
+        convergenceStatus = 'met'
+        convergenceDetail = `T-Td 将从 ${currentDiff.toFixed(1)} 收窄至 ${minFutureDiff.toFixed(1)}°C，明显趋向饱和`
+      } else if (convergence >= 1) {
+        convergenceScore = 5
+        convergenceStatus = 'partial'
+        convergenceDetail = `T-Td 将小幅收窄至 ${minFutureDiff.toFixed(1)}°C`
+      } else if (convergence >= 0) {
+        convergenceScore = 2
+        convergenceStatus = 'partial'
+        convergenceDetail = 'T-Td 保持稳定，未明显趋向饱和'
+      } else {
+        convergenceDetail = `T-Td 将扩大至 ${minFutureDiff.toFixed(1)}°C，远离饱和`
+      }
+    }
+  }
+
+  conditions.push({
+    name: 'T-Td收敛',
+    detail: convergenceDetail,
+    status: convergenceStatus,
+    icon: convergenceStatus === 'met' ? '✓' : convergenceStatus === 'partial' ? '○' : '✗'
+  })
+  probability += convergenceScore
+
   // 5. 风向稳定性分析 (权重: 10%)
-  // 持续稳定的风向意味着暖湿气团的持续平流输送，是平流雾形成和维持的关键条件
   let windDirScore = 0
   let windDirStatus = 'unmet'
   let windDirDetail = '数据不足'
@@ -222,7 +263,6 @@ export function calculateFogProbability(current, hourly) {
   probability += windDirScore
 
   // 6. 平流蓄积前兆 (附加加分，最高+8)
-  // 强风输送水汽但湍流抑制成雾，若风速即将减弱则蓄积水汽将快速凝结
   let precursorBonus = 0
   let precursorStatus = 'unmet'
   let precursorDetail = '未触发'
@@ -251,6 +291,37 @@ export function calculateFogProbability(current, hourly) {
     icon: precursorStatus === 'met' ? '✓' : precursorStatus === 'partial' ? '○' : '✗'
   })
   probability = Math.min(100, probability + precursorBonus)
+
+  // 7. 中云消退信号 (V4新增，附加加分，最高+8)
+  // 过去12小时中云从活跃转为消退 → 中层天气系统撤离 → 纯低层平流雾环境建立
+  let midCloudBonus = 0
+  let midCloudStatus = 'unmet'
+  let midCloudDetail = '未触发'
+
+  if (hourly && hourly.cloud_cover_mid) {
+    midCloudBonus = calculateMidCloudRetreatBonus(hourly.cloud_cover_mid, currentIdx)
+    const currentMid = hourly.cloud_cover_mid[currentIdx] || 0
+
+    if (midCloudBonus >= 8) {
+      midCloudStatus = 'met'
+      midCloudDetail = `中云已从高覆盖消退至 ${currentMid}%，低层平流控制建立`
+    } else if (midCloudBonus >= 5) {
+      midCloudStatus = 'partial'
+      midCloudDetail = `中云覆盖下降至 ${currentMid}%，天气系统正在撤离`
+    } else if (currentMid <= 20) {
+      midCloudDetail = `当前中云 ${currentMid}%（无近期消退过程）`
+    } else {
+      midCloudDetail = `当前中云 ${currentMid}%，中层天气系统仍活跃`
+    }
+  }
+
+  conditions.push({
+    name: '中云消退',
+    detail: midCloudDetail,
+    status: midCloudStatus,
+    icon: midCloudStatus === 'met' ? '✓' : midCloudStatus === 'partial' ? '○' : '✗'
+  })
+  probability = Math.min(100, probability + midCloudBonus)
 
   // 计算未来24小时的逐小时概率
   const hourlyProbabilities = calculateHourlyProbabilities(hourly)
@@ -287,7 +358,6 @@ export function calculateFogProbability(current, hourly) {
 function calculateHourlyProbabilities(hourly) {
   if (!hourly || !hourly.temperature_2m) return []
 
-  // 找到当前小时在数据中的起始索引
   const now = new Date()
   const currentHour = now.getHours()
   const currentDate = now.getDate()
@@ -335,6 +405,11 @@ function calculateHourlyProbabilities(hourly) {
     else if (windSpeed > 7 && windSpeed <= 10) prob += 10
     else if (windSpeed >= 1 && windSpeed < 2) prob += 8
 
+    // V4: 饱和气团高风速修正
+    if (windSpeed > 7 && humidity >= 95 && diff <= 1) {
+      prob += 8
+    }
+
     // 风向稳定性（回看前6小时）
     if (hourly.wind_direction_10m) {
       const lookbackStart = Math.max(0, idx - 6)
@@ -345,11 +420,31 @@ function calculateHourlyProbabilities(hourly) {
       else if (R >= 0.5) prob += 5
     }
 
+    // T-Td 收敛趋势（前看6小时）
+    if (hourly.dew_point_2m) {
+      const fc = Math.min(6, maxLength - idx)
+      if (fc >= 2) {
+        const fDiffs = []
+        for (let j = 0; j < fc; j++) {
+          fDiffs.push(hourly.temperature_2m[idx + j] - hourly.dew_point_2m[idx + j])
+        }
+        const conv = fDiffs[0] - Math.min(...fDiffs)
+        if (conv >= 3) prob += 10
+        else if (conv >= 2) prob += 7
+        else if (conv >= 1) prob += 4
+      }
+    }
+
     // 平流蓄积前兆（前看6小时）
     if (hourly.wind_speed_10m) {
       const futureEnd = Math.min(idx + 7, maxLength)
       const futureWindsMs = hourly.wind_speed_10m.slice(idx + 1, futureEnd).map(w => w / 3.6)
       prob += calculatePrecursorBonus(windSpeed, humidity, diff, futureWindsMs)
+    }
+
+    // 中云消退信号（回看12小时）
+    if (hourly.cloud_cover_mid) {
+      prob += calculateMidCloudRetreatBonus(hourly.cloud_cover_mid, idx)
     }
 
     // 确定等级
@@ -360,7 +455,7 @@ function calculateHourlyProbabilities(hourly) {
     probabilities.push({
       time: hourly.time[idx],
       hour: hour,
-      dataIndex: idx,  // 保存原始数据索引，供其他卡片使用
+      dataIndex: idx,
       probability: Math.min(100, prob),
       level
     })

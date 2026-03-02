@@ -46,8 +46,7 @@ Page({
     yesterday.setDate(yesterday.getDate() - 1)
     const maxDate = this.formatDate(yesterday)
     
-    // 默认选择昨天
-    const selectedDate = maxDate
+    const selectedDate = '2023-01-14'
     
     // 构建城市列表
     const cityList = Object.entries(CITIES).map(([key, value]) => ({

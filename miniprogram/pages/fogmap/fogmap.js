@@ -251,6 +251,11 @@ Page({
     else if (windSpeed > 7 && windSpeed <= 10) prob += 10
     else if (windSpeed >= 1 && windSpeed < 2) prob += 8
 
+    // V4: 饱和气团高风速修正
+    if (windSpeed > 7 && humidity >= 95 && diff <= 1) {
+      prob += 8
+    }
+
     return Math.min(100, prob)
   },
 
