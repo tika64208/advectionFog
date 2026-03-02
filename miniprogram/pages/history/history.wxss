@@ -1,0 +1,299 @@
+/* 历史查询页样式 */
+.container {
+  min-height: 100vh;
+  padding: 30rpx;
+  padding-bottom: 60rpx;
+}
+
+/* 查询表单 */
+.query-section {
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  color: var(--text-primary);
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-muted);
+  margin-bottom: 12rpx;
+}
+
+.picker-value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(10, 22, 40, 0.6);
+  border: 1rpx solid var(--border-color);
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.picker-arrow {
+  font-size: 20rpx;
+  color: var(--text-muted);
+}
+
+.btn-query {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-top: 16rpx;
+}
+
+.btn-query::after {
+  border: none;
+}
+
+.btn-query[disabled] {
+  opacity: 0.6;
+}
+
+/* 基本信息 */
+.info-header {
+  text-align: center;
+  padding: 24rpx 32rpx !important;
+  margin-bottom: 24rpx;
+}
+
+.info-city {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.info-date {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+/* 平流雾分析 */
+.fog-analysis {
+  margin-bottom: 24rpx;
+  border-left: 4rpx solid var(--border-color);
+}
+
+.fog-analysis.high {
+  border-left-color: var(--danger);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.1), var(--bg-card));
+}
+
+.fog-analysis.medium {
+  border-left-color: var(--warning);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), var(--bg-card));
+}
+
+.fog-analysis.low {
+  border-left-color: var(--success);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), var(--bg-card));
+}
+
+.fog-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.fog-icon {
+  font-size: 48rpx;
+}
+
+.fog-info {
+  flex: 1;
+}
+
+.fog-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.fog-analysis.high .fog-title { color: var(--danger); }
+.fog-analysis.medium .fog-title { color: var(--warning); }
+.fog-analysis.low .fog-title { color: var(--success); }
+
+.fog-desc {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.fog-peak {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-color);
+  font-size: 26rpx;
+  color: var(--accent-cyan);
+}
+
+/* 全天概览 */
+.overview {
+  margin-bottom: 24rpx;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.overview-item {
+  background: rgba(10, 22, 40, 0.5);
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+}
+
+.overview-label {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-muted);
+  margin-bottom: 8rpx;
+}
+
+.overview-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 逐时数据表格 */
+.hourly-section {
+  margin-bottom: 24rpx;
+}
+
+.hourly-table {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.table-header {
+  display: flex;
+  background: rgba(77, 212, 230, 0.1);
+  border-radius: 8rpx;
+  margin-bottom: 8rpx;
+}
+
+.th {
+  flex: 0 0 80rpx;
+  padding: 16rpx 8rpx;
+  font-size: 22rpx;
+  color: var(--accent-cyan);
+  text-align: center;
+  font-weight: 600;
+}
+
+.th.time {
+  flex: 0 0 90rpx;
+}
+
+.table-body {
+  max-height: 600rpx;
+  overflow-y: auto;
+}
+
+.table-row {
+  display: flex;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.table-row.high-risk {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.table-row.medium-risk {
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.td {
+  flex: 0 0 80rpx;
+  padding: 14rpx 8rpx;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.td.time {
+  flex: 0 0 90rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.td.risk {
+  font-size: 20rpx;
+}
+
+/* 图例 */
+.legend {
+  margin-bottom: 24rpx;
+}
+
+.legend-title {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 16rpx;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 22rpx;
+  color: var(--text-muted);
+}
+
+.legend-color {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 4rpx;
+}
+
+.legend-color.high { background: rgba(248, 113, 113, 0.4); }
+.legend-color.medium { background: rgba(251, 191, 36, 0.3); }
+.legend-color.low { background: rgba(52, 211, 153, 0.2); }
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: var(--text-muted);
+  text-align: center;
+}

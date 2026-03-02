@@ -1,0 +1,13 @@
+# 微信开发者工具私有配置
+miniprogram/project.private.config.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/

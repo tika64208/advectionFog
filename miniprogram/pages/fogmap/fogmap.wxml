@@ -1,0 +1,139 @@
+<!--概率地图页-->
+<view class="container">
+  <!-- 地图 -->
+  <map 
+    id="fogMap"
+    class="fog-map"
+    latitude="{{centerLat}}"
+    longitude="{{centerLon}}"
+    scale="{{mapScale}}"
+    circles="{{circles}}"
+    markers="{{markers}}"
+    show-location="{{true}}"
+    enable-zoom="{{true}}"
+    enable-scroll="{{true}}"
+    enable-overlooking="{{false}}"
+    enable-rotate="{{false}}"
+    layer-style="1"
+    bindregionchange="onRegionChange"
+    bindmarkertap="onMarkerTap"
+    bindUpdated="onMapUpdated"
+  >
+    <!-- 中心点标记 -->
+    <cover-view class="center-marker" wx:if="{{!loading}}">
+      <cover-view class="marker-dot"></cover-view>
+    </cover-view>
+  </map>
+
+  <!-- 加载遮罩 -->
+  <view class="loading-overlay" wx:if="{{loading}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">正在分析区域气象数据...</text>
+      <text class="loading-progress">{{loadingProgress}}</text>
+    </view>
+  </view>
+
+  <!-- 顶部信息栏 -->
+  <view class="info-bar">
+    <view class="location-info">
+      <text class="location-icon">📍</text>
+      <text class="location-text">{{locationName}}</text>
+    </view>
+    <view class="time-info">
+      <text>{{updateTime}}</text>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend-panel">
+    <text class="legend-title">平流雾概率</text>
+    <view class="legend-items">
+      <view class="legend-item">
+        <view class="legend-color high"></view>
+        <text>≥70% 高</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-color medium"></view>
+        <text>45-69% 中</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-color low"></view>
+        <text>&lt;45% 低</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 地图中心十字准星 -->
+  <cover-view class="crosshair" wx:if="{{!loading}}">
+    <cover-view class="crosshair-h"></cover-view>
+    <cover-view class="crosshair-v"></cover-view>
+  </cover-view>
+
+  <!-- 拖动后的查询提示 -->
+  <view class="drag-hint {{showDragHint ? 'show' : ''}}" wx:if="{{showDragHint}}">
+    <button class="query-center-btn" bindtap="queryAtCenter">
+      <text class="btn-icon">🎯</text>
+      <text>以此为中心查询</text>
+    </button>
+  </view>
+
+  <!-- 底部控制栏 -->
+  <view class="control-bar">
+    <view class="range-selector">
+      <text class="range-label">范围</text>
+      <view class="range-options">
+        <view class="range-option {{range === 25 ? 'active' : ''}}" bindtap="setRange" data-range="25">25km</view>
+        <view class="range-option {{range === 50 ? 'active' : ''}}" bindtap="setRange" data-range="50">50km</view>
+        <view class="range-option {{range === 100 ? 'active' : ''}}" bindtap="setRange" data-range="100">100km</view>
+      </view>
+    </view>
+    <view class="btn-group">
+      <button class="locate-btn" bindtap="backToMyLocation" disabled="{{loading}}">
+        <text>📍</text>
+      </button>
+      <button class="refresh-btn" bindtap="onRefresh" disabled="{{loading}}">
+        <text class="refresh-icon">🔄</text>
+        <text>刷新</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 点击详情弹窗 -->
+  <view class="detail-popup" wx:if="{{selectedPoint}}">
+    <view class="popup-content">
+      <view class="popup-header">
+        <text class="popup-title">{{selectedPoint.name}}</text>
+        <view class="popup-close" bindtap="closePopup">✕</view>
+      </view>
+      <view class="popup-body">
+        <view class="popup-prob {{selectedPoint.level}}">
+          <text class="prob-value">{{selectedPoint.probability}}%</text>
+          <text class="prob-label">平流雾概率</text>
+        </view>
+        <view class="popup-details">
+          <view class="detail-row">
+            <text class="detail-label">温度</text>
+            <text class="detail-value">{{selectedPoint.temp}}°C</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">露点</text>
+            <text class="detail-value">{{selectedPoint.dewpoint}}°C</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">温差</text>
+            <text class="detail-value">{{selectedPoint.diff}}°C</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">湿度</text>
+            <text class="detail-value">{{selectedPoint.humidity}}%</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">风速</text>
+            <text class="detail-value">{{selectedPoint.windSpeed}} m/s</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

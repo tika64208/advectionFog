@@ -1,0 +1,132 @@
+<!--历史天气查询页-->
+<view class="container">
+  <!-- 查询表单 -->
+  <view class="query-section card">
+    <text class="section-title">📅 选择日期和城市</text>
+    
+    <!-- 日期选择 -->
+    <view class="form-item">
+      <text class="form-label">查询日期</text>
+      <picker mode="date" value="{{selectedDate}}" start="2020-01-01" end="{{maxDate}}" bindchange="onDateChange">
+        <view class="picker-value">
+          <text>{{selectedDate || '请选择日期'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 城市选择 -->
+    <view class="form-item">
+      <text class="form-label">查询城市</text>
+      <picker mode="selector" range="{{cityList}}" range-key="name" value="{{cityIndex}}" bindchange="onCityChange">
+        <view class="picker-value">
+          <text>{{cityList[cityIndex].name || '请选择城市'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 查询按钮 -->
+    <button class="btn-query" bindtap="onQuery" loading="{{loading}}" disabled="{{loading}}">
+      查询历史数据
+    </button>
+  </view>
+
+  <!-- 查询结果 -->
+  <view class="result-section" wx:if="{{historyData}}">
+    <!-- 基本信息 -->
+    <view class="info-header card">
+      <text class="info-city">{{queryCity}}</text>
+      <text class="info-date">{{queryDate}}</text>
+    </view>
+
+    <!-- 平流雾分析 -->
+    <view class="fog-analysis card {{fogLevel}}">
+      <view class="fog-header">
+        <text class="fog-icon">{{fogIcon}}</text>
+        <view class="fog-info">
+          <text class="fog-title">平流雾{{fogLevelText}}</text>
+          <text class="fog-desc">{{fogDescription}}</text>
+        </view>
+      </view>
+      <view class="fog-peak" wx:if="{{peakFogTime}}">
+        <text>最易成雾时段：{{peakFogTime}}</text>
+      </view>
+    </view>
+
+    <!-- 全天概览 -->
+    <view class="overview card">
+      <text class="section-title">📊 全天概览</text>
+      <view class="overview-grid">
+        <view class="overview-item">
+          <text class="overview-label">气温范围</text>
+          <text class="overview-value">{{tempRange}}</text>
+        </view>
+        <view class="overview-item">
+          <text class="overview-label">露点范围</text>
+          <text class="overview-value">{{dewRange}}</text>
+        </view>
+        <view class="overview-item">
+          <text class="overview-label">湿度范围</text>
+          <text class="overview-value">{{humidityRange}}</text>
+        </view>
+        <view class="overview-item">
+          <text class="overview-label">风速范围</text>
+          <text class="overview-value">{{windRange}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 逐时数据表格 -->
+    <view class="hourly-section card">
+      <text class="section-title">⏰ 逐时数据</text>
+      <scroll-view class="hourly-table" scroll-x>
+        <view class="table-header">
+          <text class="th time">时间</text>
+          <text class="th">气温</text>
+          <text class="th">露点</text>
+          <text class="th">温差</text>
+          <text class="th">湿度</text>
+          <text class="th">风速</text>
+          <text class="th">概率</text>
+        </view>
+        <view class="table-body">
+          <view class="table-row {{item.riskClass}}" wx:for="{{hourlyList}}" wx:key="time">
+            <text class="td time">{{item.hour}}:00</text>
+            <text class="td">{{item.temp}}°</text>
+            <text class="td">{{item.dew}}°</text>
+            <text class="td">{{item.diff}}°</text>
+            <text class="td">{{item.humidity}}%</text>
+            <text class="td">{{item.wind}}</text>
+            <text class="td risk">{{item.riskIcon}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 图例说明 -->
+    <view class="legend card">
+      <text class="legend-title">图例说明</text>
+      <view class="legend-items">
+        <view class="legend-item">
+          <view class="legend-color high"></view>
+          <text>🌫️ 高概率（温差≤2°C，湿度≥95%）</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-color medium"></view>
+          <text>☁️ 中概率（温差≤4°C，湿度≥85%）</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-color low"></view>
+          <text>☀️ 低概率</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!historyData && !loading}}">
+    <text class="empty-icon">📅</text>
+    <text class="empty-text">选择日期和城市，查询历史气象数据</text>
+  </view>
+</view>

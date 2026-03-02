@@ -1,0 +1,106 @@
+<!--首页-->
+<view class="container">
+  <!-- 雾气动画背景 -->
+  <view class="fog-bg">
+    <view class="fog-layer fog-1"></view>
+    <view class="fog-layer fog-2"></view>
+  </view>
+
+  <!-- 头部 -->
+  <view class="header">
+    <view class="logo">
+      <text class="logo-icon">☁️</text>
+      <text class="logo-text">雾境</text>
+    </view>
+    <text class="tagline">平流雾智能预测系统</text>
+  </view>
+
+  <!-- 搜索区域 -->
+  <view class="search-section card">
+    <view class="input-group">
+      <input 
+        class="search-input" 
+        placeholder="输入城市名称或地址..."
+        placeholder-class="placeholder"
+        value="{{searchQuery}}"
+        bindinput="onInputChange"
+        bindconfirm="onSearch"
+        confirm-type="search"
+      />
+      <button class="btn-search" bindtap="onSearch" loading="{{loading}}">
+        <text wx:if="{{!loading}}">🔍</text>
+      </button>
+    </view>
+    
+    <button class="btn-locate" bindtap="onLocate" disabled="{{loading}}">
+      <text class="locate-icon">📍</text>
+      <text>定位当前位置</text>
+    </button>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="feature-entry card">
+    <view class="feature-item" bindtap="goToFogMap">
+      <text class="feature-icon">🗺️</text>
+      <view class="feature-info">
+        <text class="feature-title">概率地图</text>
+        <text class="feature-desc">查看附近50公里平流雾概率分布</text>
+      </view>
+      <text class="feature-arrow">›</text>
+    </view>
+    <view class="feature-divider"></view>
+    <view class="feature-item" bindtap="goToHistory">
+      <text class="feature-icon">📅</text>
+      <view class="feature-info">
+        <text class="feature-title">历史查询</text>
+        <text class="feature-desc">查询任意日期的气象数据</text>
+      </view>
+      <text class="feature-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 热门城市 -->
+  <view class="hot-cities card">
+    <text class="section-title">热门沿海城市</text>
+    <view class="city-grid">
+      <view 
+        class="city-item" 
+        wx:for="{{hotCities}}" 
+        wx:key="name"
+        bindtap="onCityTap"
+        data-city="{{item}}"
+      >
+        <text class="city-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 科普信息 -->
+  <view class="info-section">
+    <view class="info-card card">
+      <text class="info-title">什么是平流雾？</text>
+      <text class="info-text">平流雾是当暖湿空气水平流经较冷的下垫面时，空气底层逐渐冷却至露点温度以下而形成的雾。常见于沿海地区，特别是春季和初夏时节。</text>
+    </view>
+    
+    <view class="info-card card">
+      <text class="info-title">形成条件</text>
+      <view class="condition-list">
+        <text class="condition-item">◇ 暖湿气流流经冷的下垫面</text>
+        <text class="condition-item">◇ 温度与露点差小于3°C</text>
+        <text class="condition-item">◇ 风速适中（2-7 m/s）</text>
+        <text class="condition-item">◇ 大气层结稳定</text>
+      </view>
+    </view>
+    
+    <view class="info-card card">
+      <text class="info-title">☁️ 云量与平流雾</text>
+      <text class="info-text">低云量高时，地面附近水汽充足，配合其他条件更易形成平流雾。本应用提供三层云量预测（高云/中云/低云），帮助判断雾形成条件。</text>
+    </view>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="footer">
+    <text>数据来源：Open-Meteo API</text>
+    <text>仅供参考，不作为正式气象预报</text>
+  </view>
+</view>

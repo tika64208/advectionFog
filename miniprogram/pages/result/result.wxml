@@ -1,0 +1,275 @@
+<!--结果页-->
+<view class="container" wx:if="{{resultData}}">
+  <!-- 位置信息 -->
+  <view class="location-header">
+    <text class="location-name">{{resultData.location.name}}</text>
+    <text class="coordinates">{{resultData.location.lat.toFixed(4)}}°N, {{resultData.location.lon.toFixed(4)}}°E</text>
+  </view>
+
+  <!-- 雾预测结果 -->
+  <view class="prediction-card card {{resultData.prediction.level}}">
+    <view class="status-row">
+      <view class="status-indicator">
+        <view class="indicator-ring"></view>
+        <text class="status-icon">{{statusIcon}}</text>
+      </view>
+      <view class="status-info">
+        <text class="status-level">平流雾 {{resultData.prediction.levelText}}</text>
+        <text class="status-prob">综合概率指数：{{resultData.prediction.probability}}%</text>
+      </view>
+    </view>
+    <view class="description-box">
+      <text class="description-text">{{resultData.prediction.description}}</text>
+    </view>
+  </view>
+
+  <!-- 气象数据 -->
+  <view class="weather-grid">
+    <view class="weather-card card">
+      <text class="card-icon">🌡️</text>
+      <view class="card-content">
+        <text class="card-label">气温</text>
+        <text class="card-value">{{resultData.current.temperature_2m}}°C</text>
+      </view>
+    </view>
+    <view class="weather-card card">
+      <text class="card-icon">💧</text>
+      <view class="card-content">
+        <text class="card-label">露点温度</text>
+        <text class="card-value">{{resultData.current.dew_point_2m}}°C</text>
+      </view>
+    </view>
+    <view class="weather-card card">
+      <text class="card-icon">🌊</text>
+      <view class="card-content">
+        <text class="card-label">温度-露点差</text>
+        <text class="card-value">{{tempDewDiff}}°C</text>
+      </view>
+    </view>
+    <view class="weather-card card">
+      <text class="card-icon">💨</text>
+      <view class="card-content">
+        <text class="card-label">风速</text>
+        <text class="card-value">{{windSpeed}} m/s</text>
+      </view>
+    </view>
+    <view class="weather-card card">
+      <text class="card-icon">🧭</text>
+      <view class="card-content">
+        <text class="card-label">风向</text>
+        <text class="card-value">{{resultData.windDirection}}</text>
+      </view>
+    </view>
+    <view class="weather-card card">
+      <text class="card-icon">💦</text>
+      <view class="card-content">
+        <text class="card-label">相对湿度</text>
+        <text class="card-value">{{resultData.current.relative_humidity_2m}}%</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 24小时预测 -->
+  <view class="forecast-section card">
+    <view class="section-header-row">
+      <text class="section-title">未来24小时平流雾趋势</text>
+      <text class="toggle-btn" bindtap="toggleHourlyDetail">{{showHourlyDetail ? '收起详情' : '查看详情'}}</text>
+    </view>
+    <scroll-view class="forecast-scroll" scroll-x enable-flex>
+      <view class="forecast-list">
+        <view 
+          class="forecast-item" 
+          wx:for="{{resultData.prediction.hourlyProbabilities}}" 
+          wx:key="time"
+        >
+          <text class="forecast-time">{{item.hour}}:00</text>
+          <view class="forecast-bar">
+            <view class="forecast-fill {{item.level}}" style="height: {{item.probability}}%"></view>
+          </view>
+          <text class="forecast-value">{{item.probability}}%</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 逐时详细数据 -->
+  <view class="hourly-detail card" wx:if="{{showHourlyDetail}}">
+    <text class="section-title">⏰ 逐时预测数据</text>
+    <scroll-view class="hourly-table" scroll-x>
+      <view class="table-header">
+        <text class="th time">时间</text>
+        <text class="th">气温</text>
+        <text class="th">露点</text>
+        <text class="th">温差</text>
+        <text class="th">湿度</text>
+        <text class="th">风速</text>
+        <text class="th">概率</text>
+      </view>
+      <view class="table-body">
+        <view class="table-row {{item.riskClass}}" wx:for="{{hourlyDetailList}}" wx:key="hour">
+          <text class="td time">{{item.hour}}:00</text>
+          <text class="td">{{item.temp}}°</text>
+          <text class="td">{{item.dew}}°</text>
+          <text class="td {{item.diffClass}}">{{item.diff}}°</text>
+          <text class="td">{{item.humidity}}%</text>
+          <text class="td">{{item.wind}}</text>
+          <text class="td risk">{{item.riskIcon}}</text>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="table-legend">
+      <text class="legend-item">🌫️ 高概率</text>
+      <text class="legend-item">☁️ 中概率</text>
+      <text class="legend-item">☀️ 低概率</text>
+    </view>
+  </view>
+
+  <!-- 云量预测 -->
+  <view class="cloud-section card" wx:if="{{cloudData}}">
+    <view class="section-header-row">
+      <text class="section-title">☁️ 云量预测</text>
+      <text class="cloud-current">当前总云量 {{cloudData.current}}%</text>
+    </view>
+    
+    <!-- 三层云量图 -->
+    <view class="cloud-layers">
+      <view class="cloud-layer">
+        <view class="layer-info">
+          <text class="layer-name">高云</text>
+          <text class="layer-height">(6km以上)</text>
+        </view>
+        <view class="layer-bar-wrap">
+          <view class="layer-bar high-cloud" style="width: {{cloudData.high}}%"></view>
+        </view>
+        <text class="layer-value">{{cloudData.high}}%</text>
+      </view>
+      <view class="cloud-layer">
+        <view class="layer-info">
+          <text class="layer-name">中云</text>
+          <text class="layer-height">(2-6km)</text>
+        </view>
+        <view class="layer-bar-wrap">
+          <view class="layer-bar mid-cloud" style="width: {{cloudData.mid}}%"></view>
+        </view>
+        <text class="layer-value">{{cloudData.mid}}%</text>
+      </view>
+      <view class="cloud-layer">
+        <view class="layer-info">
+          <text class="layer-name">低云</text>
+          <text class="layer-height">(2km以下)</text>
+        </view>
+        <view class="layer-bar-wrap">
+          <view class="layer-bar low-cloud" style="width: {{cloudData.low}}%"></view>
+        </view>
+        <text class="layer-value">{{cloudData.low}}%</text>
+      </view>
+    </view>
+
+    <!-- 云量趋势 - 三条水平格子（可滚动） -->
+    <view class="cloud-trend" wx:if="{{showCloudTrend}}">
+      <text class="trend-title">未来24小时云量变化</text>
+      
+      <scroll-view class="cloud-grid-scroll" scroll-x enable-flex>
+        <view class="cloud-grid-content">
+          <!-- 时间轴 -->
+          <view class="grid-time-row">
+            <view class="grid-label"></view>
+            <view class="grid-times">
+              <text class="grid-time" wx:for="{{cloudTrendList}}" wx:key="hour">{{item.hour}}</text>
+            </view>
+          </view>
+          
+          <!-- 高云行 -->
+          <view class="grid-row">
+            <view class="grid-label">
+              <text class="label-name">高云</text>
+            </view>
+            <view class="grid-cells">
+              <view class="grid-cell" wx:for="{{cloudTrendList}}" wx:key="hour" 
+                    style="background: rgba(167, 139, 250, {{item.high / 100}})">
+                <text class="cell-value" wx:if="{{item.high > 30}}">{{item.high}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 中云行 -->
+          <view class="grid-row">
+            <view class="grid-label">
+              <text class="label-name">中云</text>
+            </view>
+            <view class="grid-cells">
+              <view class="grid-cell" wx:for="{{cloudTrendList}}" wx:key="hour"
+                    style="background: rgba(100, 165, 255, {{item.mid / 100}})">
+                <text class="cell-value" wx:if="{{item.mid > 30}}">{{item.mid}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 低云行 -->
+          <view class="grid-row">
+            <view class="grid-label">
+              <text class="label-name">低云</text>
+            </view>
+            <view class="grid-cells">
+              <view class="grid-cell" wx:for="{{cloudTrendList}}" wx:key="hour"
+                    style="background: rgba(77, 212, 230, {{item.low / 100}})">
+                <text class="cell-value" wx:if="{{item.low > 30}}">{{item.low}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      
+      <!-- 色阶图例 -->
+      <view class="grid-legend">
+        <text class="legend-label">云量:</text>
+        <view class="legend-scale">
+          <view class="scale-item" style="background: rgba(100, 165, 255, 0.1)"></view>
+          <view class="scale-item" style="background: rgba(100, 165, 255, 0.3)"></view>
+          <view class="scale-item" style="background: rgba(100, 165, 255, 0.5)"></view>
+          <view class="scale-item" style="background: rgba(100, 165, 255, 0.7)"></view>
+          <view class="scale-item" style="background: rgba(100, 165, 255, 1)"></view>
+        </view>
+        <view class="scale-labels">
+          <text>0%</text>
+          <text>100%</text>
+        </view>
+      </view>
+    </view>
+    <view class="toggle-cloud-trend" bindtap="toggleCloudTrend">
+      <text>{{showCloudTrend ? '收起趋势' : '查看趋势'}}</text>
+    </view>
+  </view>
+
+  <!-- 条件分析 -->
+  <view class="conditions-section card">
+    <text class="section-title">平流雾形成条件分析</text>
+    <view class="conditions-list">
+      <view 
+        class="condition-item {{item.status}}" 
+        wx:for="{{resultData.prediction.conditions}}" 
+        wx:key="name"
+      >
+        <view class="condition-icon-wrap">
+          <text class="condition-icon">{{item.icon}}</text>
+        </view>
+        <view class="condition-content">
+          <text class="condition-name">{{item.name}}</text>
+          <text class="condition-detail">{{item.detail}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 重新查询按钮 -->
+  <view class="action-section">
+    <button class="btn-primary" bindtap="onBack">重新查询</button>
+  </view>
+</view>
+
+<!-- 无数据提示 -->
+<view class="empty-state" wx:else>
+  <text class="empty-icon">🌫️</text>
+  <text class="empty-text">暂无数据</text>
+  <button class="btn-primary" bindtap="onBack">返回首页</button>
+</view>

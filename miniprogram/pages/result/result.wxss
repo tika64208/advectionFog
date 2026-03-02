@@ -1,0 +1,631 @@
+/* 结果页样式 */
+.container {
+  min-height: 100vh;
+  padding: 30rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 位置信息 */
+.location-header {
+  text-align: center;
+  margin-bottom: 30rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.location-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.coordinates {
+  color: var(--text-muted);
+  font-size: 24rpx;
+}
+
+/* 预测卡片 */
+.prediction-card {
+  margin-bottom: 30rpx;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 30rpx;
+  margin-bottom: 24rpx;
+}
+
+.status-indicator {
+  position: relative;
+  width: 120rpx;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.indicator-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  border: 4rpx solid var(--border-color);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.prediction-card.high .indicator-ring {
+  border-color: var(--danger);
+  box-shadow: 0 0 30rpx rgba(248, 113, 113, 0.4);
+}
+
+.prediction-card.medium .indicator-ring {
+  border-color: var(--warning);
+  box-shadow: 0 0 30rpx rgba(251, 191, 36, 0.4);
+}
+
+.prediction-card.low .indicator-ring {
+  border-color: var(--success);
+  box-shadow: 0 0 30rpx rgba(52, 211, 153, 0.4);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.7; }
+}
+
+.status-icon {
+  font-size: 48rpx;
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-level {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.prediction-card.high .status-level { color: var(--danger); }
+.prediction-card.medium .status-level { color: var(--warning); }
+.prediction-card.low .status-level { color: var(--success); }
+
+.status-prob {
+  color: var(--text-secondary);
+  font-size: 26rpx;
+}
+
+.description-box {
+  background: rgba(10, 22, 40, 0.5);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  border-left: 4rpx solid var(--accent-cyan);
+}
+
+.description-text {
+  color: var(--text-secondary);
+  font-size: 26rpx;
+  line-height: 1.8;
+}
+
+/* 气象数据网格 */
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  margin-bottom: 30rpx;
+}
+
+.weather-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx !important;
+  margin-bottom: 0 !important;
+}
+
+.card-icon {
+  font-size: 36rpx;
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(77, 212, 230, 0.1);
+  border-radius: 12rpx;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-label {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-muted);
+  margin-bottom: 4rpx;
+}
+
+.card-value {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 24小时预测 */
+.forecast-section {
+  margin-bottom: 30rpx;
+}
+
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.section-header-row .section-title {
+  margin-bottom: 0;
+}
+
+.toggle-btn {
+  font-size: 24rpx;
+  color: var(--accent-cyan);
+  padding: 8rpx 16rpx;
+  background: rgba(77, 212, 230, 0.1);
+  border-radius: 8rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  color: var(--text-primary);
+}
+
+/* 逐时详细数据表格 */
+.hourly-detail {
+  margin-bottom: 30rpx;
+}
+
+.hourly-table {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.table-header {
+  display: flex;
+  background: rgba(77, 212, 230, 0.1);
+  border-radius: 8rpx;
+  margin-bottom: 8rpx;
+}
+
+.th {
+  flex: 0 0 80rpx;
+  padding: 16rpx 8rpx;
+  font-size: 22rpx;
+  color: var(--accent-cyan);
+  text-align: center;
+  font-weight: 600;
+}
+
+.th.time {
+  flex: 0 0 90rpx;
+}
+
+.table-body {
+  max-height: 500rpx;
+  overflow-y: auto;
+}
+
+.table-row {
+  display: flex;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.table-row.high-risk {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.table-row.medium-risk {
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.td {
+  flex: 0 0 80rpx;
+  padding: 14rpx 8rpx;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.td.time {
+  flex: 0 0 90rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.td.diff-danger {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.td.diff-warning {
+  color: var(--warning);
+}
+
+.td.risk {
+  font-size: 20rpx;
+}
+
+.table-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.table-legend .legend-item {
+  font-size: 22rpx;
+  color: var(--text-muted);
+}
+
+/* 云量预测 */
+.cloud-section {
+  margin-bottom: 30rpx;
+}
+
+.cloud-current {
+  font-size: 24rpx;
+  color: var(--accent-cyan);
+  background: rgba(77, 212, 230, 0.1);
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+.cloud-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.cloud-layer {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.layer-info {
+  width: 120rpx;
+  flex-shrink: 0;
+}
+
+.layer-name {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.layer-height {
+  font-size: 20rpx;
+  color: var(--text-muted);
+}
+
+.layer-bar-wrap {
+  flex: 1;
+  height: 24rpx;
+  background: rgba(10, 22, 40, 0.5);
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.layer-bar {
+  height: 100%;
+  border-radius: 12rpx;
+  transition: width 0.5s ease;
+}
+
+.layer-bar.high-cloud {
+  background: linear-gradient(90deg, #a78bfa, #c4b5fd);
+}
+
+.layer-bar.mid-cloud {
+  background: linear-gradient(90deg, #64a5ff, #93c5fd);
+}
+
+.layer-bar.low-cloud {
+  background: linear-gradient(90deg, #4dd4e6, #67e8f9);
+}
+
+.layer-value {
+  width: 60rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* 云量趋势 - 格子视图 */
+.cloud-trend {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.trend-title {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: 20rpx;
+}
+
+/* 可滚动容器 */
+.cloud-grid-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.cloud-grid-content {
+  display: inline-block;
+  min-width: 100%;
+}
+
+/* 时间轴行 */
+.grid-time-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.grid-label {
+  width: 80rpx;
+  flex-shrink: 0;
+}
+
+.grid-times {
+  display: flex;
+}
+
+.grid-time {
+  width: 44rpx;
+  text-align: center;
+  font-size: 18rpx;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* 云量行 */
+.grid-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6rpx;
+}
+
+.label-name {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+.grid-cells {
+  display: flex;
+  gap: 4rpx;
+}
+
+.grid-cell {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.cell-value {
+  font-size: 16rpx;
+  color: #fff;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
+}
+
+/* 色阶图例 */
+.grid-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin-top: 20rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.legend-label {
+  font-size: 20rpx;
+  color: var(--text-muted);
+}
+
+.legend-scale {
+  display: flex;
+  gap: 2rpx;
+}
+
+.scale-item {
+  width: 24rpx;
+  height: 16rpx;
+  border-radius: 3rpx;
+}
+
+.scale-labels {
+  display: flex;
+  gap: 8rpx;
+  font-size: 18rpx;
+  color: var(--text-muted);
+}
+
+.toggle-cloud-trend {
+  text-align: center;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.toggle-cloud-trend text {
+  font-size: 24rpx;
+  color: var(--accent-cyan);
+}
+
+.forecast-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.forecast-list {
+  display: inline-flex;
+  gap: 12rpx;
+  padding-bottom: 12rpx;
+}
+
+.forecast-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 12rpx;
+  background: rgba(10, 22, 40, 0.4);
+  border-radius: 12rpx;
+  min-width: 80rpx;
+}
+
+.forecast-time {
+  font-size: 22rpx;
+  color: var(--text-muted);
+  margin-bottom: 12rpx;
+}
+
+.forecast-bar {
+  width: 12rpx;
+  height: 100rpx;
+  background: var(--border-color);
+  border-radius: 6rpx;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+
+.forecast-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 6rpx;
+  transition: height 0.5s ease;
+}
+
+.forecast-fill.high { background: linear-gradient(to top, var(--danger), #fca5a5); }
+.forecast-fill.medium { background: linear-gradient(to top, var(--warning), #fde047); }
+.forecast-fill.low { background: linear-gradient(to top, var(--success), #6ee7b7); }
+
+.forecast-value {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* 条件分析 */
+.conditions-section {
+  margin-bottom: 30rpx;
+}
+
+.conditions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.condition-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx;
+  background: rgba(10, 22, 40, 0.4);
+  border-radius: 12rpx;
+  border-left: 4rpx solid var(--border-color);
+}
+
+.condition-item.met { border-left-color: var(--success); }
+.condition-item.partial { border-left-color: var(--warning); }
+.condition-item.unmet { border-left-color: var(--danger); }
+
+.condition-icon-wrap {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.condition-item.met .condition-icon-wrap { background: rgba(52, 211, 153, 0.15); }
+.condition-item.partial .condition-icon-wrap { background: rgba(251, 191, 36, 0.15); }
+.condition-item.unmet .condition-icon-wrap { background: rgba(248, 113, 113, 0.15); }
+
+.condition-icon {
+  font-size: 28rpx;
+}
+
+.condition-content {
+  flex: 1;
+}
+
+.condition-name {
+  display: block;
+  font-weight: 600;
+  font-size: 28rpx;
+  margin-bottom: 4rpx;
+}
+
+.condition-detail {
+  font-size: 24rpx;
+  color: var(--text-muted);
+}
+
+/* 操作区域 */
+.action-section {
+  padding: 20rpx 0;
+}
+
+.action-section .btn-primary {
+  width: 100%;
+}
+
+/* 空状态 */
+.empty-state {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  color: var(--text-muted);
+  font-size: 32rpx;
+  margin-bottom: 40rpx;
+}

@@ -1,0 +1,26 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/result/result",
+    "pages/history/history",
+    "pages/fogmap/fogmap"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0a1628",
+    "navigationBarTitleText": "雾境",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0a1628",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于获取您的位置以查询当地平流雾预测"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ]
+}
