@@ -1,6 +1,6 @@
 # 雾境 — 平流雾智能预测系统
 
-基于多因子加权评分模型的平流雾（Advection Fog）概率预测工具，提供 Web 版和微信小程序版。
+基于多因子加权评分模型的平流雾（Advection Fog）概率预测微信小程序。
 
 气象数据来源于 [Open-Meteo](https://open-meteo.com/) 免费 API，地理编码使用 [Nominatim](https://nominatim.openstreetmap.org/)。
 
@@ -31,11 +31,8 @@
 ## 项目结构
 
 ```
-├── index.html              # Web 版页面
-├── app.js                  # Web 版逻辑
-├── style.css               # Web 版样式
-├── ALGORITHM_CHANGELOG.md  # 算法版本演进记录
-└── miniprogram/            # 微信小程序版
+├── ALGORITHM_CHANGELOG.md      # 算法版本演进记录
+└── miniprogram/
     ├── app.js / app.json / app.wxss
     ├── utils/
     │   ├── fog-calculator.js   # 核心预测算法
@@ -49,12 +46,6 @@
 ```
 
 ## 使用方式
-
-### Web 版
-
-直接用浏览器打开 `index.html` 即可，无需构建。
-
-### 微信小程序版
 
 1. 下载 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
 2. 导入 `miniprogram/` 目录
