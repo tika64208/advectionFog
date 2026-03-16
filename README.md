@@ -10,6 +10,7 @@
 - **逐时预报** — 未来 24 小时逐时雾概率趋势
 - **概率地图** — 以当前位置为中心，展示周边区域平流雾概率分布
 - **历史记录** — 保存查询历史，方便回顾对比
+- **联系作者** — 使用小程序客服消息，用户可在小程序内发起会话向作者发消息
 
 ## 预测算法
 
@@ -53,6 +54,10 @@
    - `https://api.open-meteo.com`
    - `https://nominatim.openstreetmap.org`
 4. 编译运行
+
+## 客服消息
+
+首页提供「联系作者」入口，使用微信小程序 [客服消息](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/customer-message.html) 能力：用户点击后唤起客服会话页面，向小程序发送的消息会进入微信公众平台「客服消息」中。作者需在 [微信公众平台](https://mp.weixin.qq.com/) → 小程序 → 功能 → 客服 中绑定客服人员或接入第三方客服，即可接收与回复用户消息。
 
 ## 数据来源
 

@@ -23,6 +23,20 @@
     </view>
   </view>
 
+  <!-- 预报预警 -->
+  <view class="forecast-alert card {{forecastAlert.level}}" wx:if="{{forecastAlert}}">
+    <view class="alert-header">
+      <text class="alert-icon">{{forecastAlert.icon}}</text>
+      <text class="alert-title">{{forecastAlert.title}}</text>
+    </view>
+    <text class="alert-message">{{forecastAlert.message}}</text>
+    <view class="alert-windows" wx:if="{{forecastWindows.length > 1}}">
+      <text class="alert-sub" wx:for="{{forecastWindows}}" wx:key="startHour" wx:if="{{index > 0}}">
+        另有 {{item.hours}}小时{{item.level === 'high' ? '高' : '中'}}概率时段（{{item.startHour < 10 ? '0' : ''}}{{item.startHour}}:00 起）
+      </text>
+    </view>
+  </view>
+
   <!-- 气象数据 -->
   <view class="weather-grid">
     <view class="weather-card card">

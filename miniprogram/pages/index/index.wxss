@@ -151,6 +151,70 @@
   font-size: 32rpx;
 }
 
+/* 快速预报横幅 */
+.quick-alert {
+  margin-bottom: 24rpx;
+  border-left: 6rpx solid var(--border-color);
+  animation: slideIn 0.5s ease-out;
+}
+
+.quick-alert.high {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.04));
+}
+
+.quick-alert.medium {
+  border-left-color: #fb923c;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.14), rgba(251, 146, 60, 0.04));
+}
+
+.quick-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.quick-alert-icon {
+  font-size: 44rpx;
+}
+
+.quick-alert-text {
+  flex: 1;
+}
+
+.quick-alert-city {
+  font-size: 24rpx;
+  color: var(--text-muted);
+  margin-right: 12rpx;
+}
+
+.quick-alert-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.quick-alert.high .quick-alert-title { color: #fca5a5; }
+.quick-alert.medium .quick-alert-title { color: #fdba74; }
+
+.quick-alert-arrow {
+  font-size: 36rpx;
+  color: var(--text-muted);
+}
+
+.quick-alert-message {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@keyframes slideIn {
+  0% { opacity: 0; transform: translateX(-20rpx); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
 /* 功能入口 */
 .feature-entry {
   position: relative;
@@ -207,6 +271,27 @@
   height: 1rpx;
   background: var(--border-color);
   margin: 0 20rpx;
+}
+
+/* 联系作者（客服消息）按钮：视觉与 feature-item 一致 */
+.btn-contact {
+  width: 100%;
+  margin: 0;
+  padding: 28rpx 32rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+  line-height: inherit;
+  color: inherit;
+  font-size: inherit;
+}
+
+.btn-contact::after {
+  border: none;
 }
 
 /* 热门城市 */
@@ -297,4 +382,18 @@
 .footer text {
   color: var(--text-muted);
   font-size: 22rpx;
+}
+
+.footer-contact {
+  margin-top: 24rpx;
+  padding: 16rpx 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.footer-contact::after {
+  border: none;
 }

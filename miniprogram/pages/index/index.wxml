@@ -38,6 +38,19 @@
     </button>
   </view>
 
+  <!-- 快速预报横幅 -->
+  <view class="quick-alert card {{quickAlert.level}}" wx:if="{{quickAlert}}" bindtap="onCityTap" data-city="{{hotCities[2]}}">
+    <view class="quick-alert-header">
+      <text class="quick-alert-icon">{{quickAlert.icon}}</text>
+      <view class="quick-alert-text">
+        <text class="quick-alert-city">{{quickCity}}</text>
+        <text class="quick-alert-title">{{quickAlert.title}}</text>
+      </view>
+      <text class="quick-alert-arrow">›</text>
+    </view>
+    <text class="quick-alert-message">{{quickAlert.message}}</text>
+  </view>
+
   <!-- 功能入口 -->
   <view class="feature-entry card">
     <view class="feature-item" bindtap="goToFogMap">
@@ -102,5 +115,6 @@
   <view class="footer">
     <text>数据来源：Open-Meteo API</text>
     <text>仅供参考，不作为正式气象预报</text>
+    <button open-type="contact" class="footer-contact" session-from="雾境-首页">💬 联系作者</button>
   </view>
 </view>

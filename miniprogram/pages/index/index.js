@@ -2,7 +2,7 @@
  * 首页
  */
 import { geocodeLocation, reverseGeocode, fetchWeatherData } from '../../utils/api'
-import { calculateFogProbability, getWindDirection } from '../../utils/fog-calculator'
+import { calculateFogProbability, getWindDirection, generateForecastSummary } from '../../utils/fog-calculator'
 
 Page({
   data: {
@@ -17,7 +17,30 @@ Page({
       { name: '烟台', lat: 37.4638, lon: 121.4479 },
       { name: '宁波', lat: 29.8683, lon: 121.5440 },
       { name: '威海', lat: 37.5091, lon: 122.1164 }
-    ]
+    ],
+    quickAlert: null,
+    quickCity: ''
+  },
+
+  onLoad() {
+    this.loadQuickForecast()
+  },
+
+  async loadQuickForecast() {
+    try {
+      const city = { lat: 24.4795, lon: 118.0894, name: '厦门' }
+      const weatherData = await fetchWeatherData(city.lat, city.lon)
+      const prediction = calculateFogProbability(weatherData.current, weatherData.hourly)
+      const forecast = generateForecastSummary(prediction.hourlyProbabilities)
+      if (forecast.alert) {
+        this.setData({
+          quickAlert: forecast.alert,
+          quickCity: city.name
+        })
+      }
+    } catch (e) {
+      console.log('Quick forecast failed:', e)
+    }
   },
 
   onInputChange(e) {

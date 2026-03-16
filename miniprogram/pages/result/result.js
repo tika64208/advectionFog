@@ -1,6 +1,8 @@
 /**
  * 结果页
  */
+import { generateForecastSummary } from '../../utils/fog-calculator'
+
 Page({
   data: {
     resultData: null,
@@ -39,6 +41,9 @@ Page({
       const latStr = Number(resultData.location.lat).toFixed(4)
       const lonStr = Number(resultData.location.lon).toFixed(4)
 
+      // 生成预报摘要
+      const forecast = generateForecastSummary(resultData.prediction.hourlyProbabilities)
+
       this.setData({
         resultData,
         tempDewDiff,
@@ -48,7 +53,9 @@ Page({
         statusIcon: statusIcons[resultData.prediction.level],
         hourlyDetailList,
         cloudData,
-        cloudTrendList
+        cloudTrendList,
+        forecastAlert: forecast.alert,
+        forecastWindows: forecast.windows
       })
     }
   },

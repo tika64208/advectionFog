@@ -484,3 +484,118 @@ function calculateHourlyProbabilities(hourly, overrideStart) {
 
   return probabilities
 }
+
+/**
+ * 从逐时概率中提取雾窗口，生成预报摘要
+ * @param {Array} hourlyProbabilities - calculateFogProbability 返回的 hourlyProbabilities
+ * @returns {object} { windows, alert, currentInFog }
+ */
+export function generateForecastSummary(hourlyProbabilities) {
+  if (!hourlyProbabilities || hourlyProbabilities.length === 0) {
+    return { windows: [], alert: null, currentInFog: false }
+  }
+
+  // 提取连续的高概率窗口
+  const windows = []
+  let cur = null
+
+  for (const item of hourlyProbabilities) {
+    if (item.level === 'high') {
+      if (!cur) {
+        cur = {
+          level: 'high',
+          startHour: item.hour,
+          endHour: (item.hour + 1) % 24,
+          peakHour: item.hour,
+          peakProb: item.probability,
+          hours: 1,
+          startIdx: item.dataIndex
+        }
+      } else {
+        cur.endHour = (item.hour + 1) % 24
+        cur.hours++
+        if (item.probability > cur.peakProb) {
+          cur.peakProb = item.probability
+          cur.peakHour = item.hour
+        }
+      }
+    } else {
+      if (cur) { windows.push(cur); cur = null }
+    }
+  }
+  if (cur) windows.push(cur)
+
+  // 如果没有高概率窗口，找连续 ≥3 小时的中概率窗口
+  if (windows.length === 0) {
+    cur = null
+    for (const item of hourlyProbabilities) {
+      if (item.level === 'medium') {
+        if (!cur) {
+          cur = {
+            level: 'medium',
+            startHour: item.hour,
+            endHour: (item.hour + 1) % 24,
+            peakHour: item.hour,
+            peakProb: item.probability,
+            hours: 1,
+            startIdx: item.dataIndex
+          }
+        } else {
+          cur.endHour = (item.hour + 1) % 24
+          cur.hours++
+          if (item.probability > cur.peakProb) {
+            cur.peakProb = item.probability
+            cur.peakHour = item.hour
+          }
+        }
+      } else {
+        if (cur && cur.hours >= 3) windows.push(cur)
+        cur = null
+      }
+    }
+    if (cur && cur.hours >= 3) windows.push(cur)
+  }
+
+  if (windows.length === 0) {
+    return { windows: [], alert: null, currentInFog: false }
+  }
+
+  // 判断当前是否已在雾窗口中
+  const nowHour = hourlyProbabilities[0].hour
+  const firstWindow = windows[0]
+  const currentInFog = firstWindow.startHour === nowHour && firstWindow.level === 'high'
+
+  // 生成预报文本
+  const pad = h => String(h).padStart(2, '0')
+  const main = windows[0]
+  let alert
+
+  if (currentInFog) {
+    alert = {
+      type: 'ongoing',
+      level: 'high',
+      title: '平流雾正在发生',
+      message: `当前正处于高概率时段，预计持续至 ${pad(main.endHour)}:00（共${main.hours}小时，峰值${main.peakProb}%约${pad(main.peakHour)}:00）`,
+      icon: '🌫️'
+    }
+  } else if (main.level === 'high') {
+    const hoursUntil = (main.startHour - nowHour + 24) % 24
+    alert = {
+      type: 'upcoming',
+      level: 'high',
+      title: `${hoursUntil}小时后将出现平流雾`,
+      message: `预计 ${pad(main.startHour)}:00 至 ${pad(main.endHour)}:00 为高概率时段（持续${main.hours}小时，峰值${main.peakProb}%约${pad(main.peakHour)}:00）`,
+      icon: '⚠️'
+    }
+  } else {
+    alert = {
+      type: 'watch',
+      level: 'medium',
+      title: '关注：有雾形成条件',
+      message: `${pad(main.startHour)}:00 至 ${pad(main.endHour)}:00 持续${main.hours}小时中概率（峰值${main.peakProb}%）`,
+      icon: '☁️'
+    }
+  }
+
+  return { windows, alert, currentInFog }
+}

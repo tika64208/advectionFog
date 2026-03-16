@@ -115,6 +115,68 @@
   line-height: 1.8;
 }
 
+/* 预报预警卡片 */
+.forecast-alert {
+  margin-bottom: 24rpx;
+  border-left: 6rpx solid var(--border-color);
+  animation: alertPulse 2s ease-in-out;
+}
+
+.forecast-alert.high {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.03));
+}
+
+.forecast-alert.medium {
+  border-left-color: #fb923c;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.12), rgba(251, 146, 60, 0.03));
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.alert-icon {
+  font-size: 40rpx;
+}
+
+.alert-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.forecast-alert.high .alert-title { color: #fca5a5; }
+.forecast-alert.medium .alert-title { color: #fdba74; }
+
+.alert-message {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.alert-windows {
+  margin-top: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.alert-sub {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-muted);
+  margin-top: 4rpx;
+}
+
+@keyframes alertPulse {
+  0% { opacity: 0; transform: translateY(-10rpx); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 /* 气象数据网格 */
 .weather-grid {
   display: grid;
