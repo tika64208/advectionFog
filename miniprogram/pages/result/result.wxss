@@ -26,6 +26,31 @@
   font-size: 24rpx;
 }
 
+.weather-context {
+  margin-bottom: 24rpx;
+  padding: 24rpx;
+  border-left: 6rpx solid #38bdf8;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(56, 189, 248, 0.03));
+}
+
+.weather-context .wc-line {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text-primary);
+  line-height: 1.65;
+}
+
+.weather-context .wc-icon {
+  margin-right: 8rpx;
+}
+
+.weather-context .wc-sub {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: var(--text-muted);
+}
+
 /* 预测卡片 */
 .prediction-card {
   margin-bottom: 30rpx;

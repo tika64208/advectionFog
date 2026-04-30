@@ -51,15 +51,15 @@
     <view class="legend-items">
       <view class="legend-item">
         <view class="legend-color high"></view>
-        <text>≥70% 高</text>
+        <text>≥80% 高</text>
       </view>
       <view class="legend-item">
         <view class="legend-color medium"></view>
-        <text>45-69% 中</text>
+        <text>60-79% 中</text>
       </view>
       <view class="legend-item">
         <view class="legend-color low"></view>
-        <text>&lt;45% 低</text>
+        <text>&lt;60% 低</text>
       </view>
     </view>
   </view>

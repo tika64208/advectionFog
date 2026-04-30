@@ -2,6 +2,144 @@
  * 平流雾预测算法 V4
  */
 
+/** 概率分档：高 ≥80%，中 60～79%，低 <60% */
+export const FOG_PROB_HIGH_MIN = 80
+export const FOG_PROB_MEDIUM_MIN = 60
+
+/** WMO：45/48 为雾；51–67 为毛毛雨/冻毛毛雨/雨；80–82 阵雨；95+ 雷暴 */
+const WMO_FOG = new Set([45, 48])
+const WMO_DRIZZLE = new Set([51, 53, 55, 56, 57])
+const WMO_RAIN = new Set([61, 63, 65, 66, 67])
+const WMO_SHOWERS = new Set([80, 81, 82])
+const WMO_STORM = new Set([95, 96, 97, 98, 99])
+
+/**
+ * 逐时降水量 (mm/h)，优先用 total precipitation
+ */
+function hourlyPrecipitationMm(hourly, idx) {
+  if (!hourly || idx < 0) return 0
+  const p = hourly.precipitation != null ? hourly.precipitation[idx] : null
+  if (p != null && !Number.isNaN(p)) return Math.max(0, p)
+  const r = hourly.rain != null ? hourly.rain[idx] : 0
+  const sh = hourly.showers != null ? hourly.showers[idx] : 0
+  return Math.max(0, (r || 0) + (sh || 0))
+}
+
+function hourlyWeatherCode(hourly, idx, fallbackCurrent) {
+  if (hourly && hourly.weather_code != null && hourly.weather_code[idx] != null) {
+    return hourly.weather_code[idx]
+  }
+  if (fallbackCurrent && fallbackCurrent.weather_code != null) {
+    return fallbackCurrent.weather_code
+  }
+  return null
+}
+
+/**
+ * 区分「平流雾有利」与「降雨为主」：用于压低降雨时段的雾指数，避免与大雨/中雨混淆。
+ * @returns {{ dominant: 'fog'|'rain'|'neutral', rainLevel: string, multiplier: number, cap: number|null, detail: string, weatherCode: number|null, precipMm: number }}
+ */
+export function classifyRainVsFog(weatherCode, precipMm) {
+  const code = weatherCode != null ? weatherCode : -1
+  const p = precipMm != null && !Number.isNaN(precipMm) ? precipMm : 0
+
+  if (WMO_FOG.has(code)) {
+    return {
+      dominant: 'fog',
+      rainLevel: 'none',
+      multiplier: 1,
+      cap: null,
+      detail: '天气代码指示雾/低能见度，与平流雾指标更可对照解读。',
+      weatherCode: code,
+      precipMm: p
+    }
+  }
+
+  const storm = WMO_STORM.has(code)
+  const heavyCode = code === 65 || code === 67 || code === 82 || storm
+  const moderateCode = code === 63 || code === 81
+  const lightRainCode = WMO_RAIN.has(code) || code === 80 || WMO_DRIZZLE.has(code)
+
+  if (heavyCode || p >= 2) {
+    return {
+      dominant: 'rain',
+      rainLevel: 'heavy',
+      multiplier: 0.22,
+      cap: 28,
+      detail: `明显降水（约 ${p.toFixed(1)} mm/h 或强对流代码），能见度下降主要来自降雨；雾指数为参考修正值。`,
+      weatherCode: code,
+      precipMm: p
+    }
+  }
+  if (moderateCode || p >= 0.5) {
+    return {
+      dominant: 'rain',
+      rainLevel: 'moderate',
+      multiplier: 0.4,
+      cap: 38,
+      detail: `中等强度降水（约 ${p.toFixed(1)} mm/h），优先按降雨理解低能见度。`,
+      weatherCode: code,
+      precipMm: p
+    }
+  }
+  if (p >= 0.15 || (lightRainCode && p >= 0.08)) {
+    return {
+      dominant: 'rain',
+      rainLevel: 'light',
+      multiplier: 0.62,
+      cap: 48,
+      detail: `有弱到中等降水（约 ${p.toFixed(1)} mm/h），与平流雾可能叠加，已适度下调雾指数。`,
+      weatherCode: code,
+      precipMm: p
+    }
+  }
+  if (WMO_DRIZZLE.has(code) || (lightRainCode && p > 0)) {
+    return {
+      dominant: 'neutral',
+      rainLevel: 'trace',
+      multiplier: 0.88,
+      cap: null,
+      detail: `微量毛毛雨/小雨（约 ${p.toFixed(1)} mm/h），与雾环境接近，指数略作保守处理。`,
+      weatherCode: code,
+      precipMm: p
+    }
+  }
+  if (WMO_SHOWERS.has(code) && p < 0.08) {
+    return {
+      dominant: 'neutral',
+      rainLevel: 'trace',
+      multiplier: 0.92,
+      cap: null,
+      detail: '天气代码含阵雨但逐时雨量很小，以实况为准。',
+      weatherCode: code,
+      precipMm: p
+    }
+  }
+
+  return {
+    dominant: 'neutral',
+    rainLevel: 'none',
+    multiplier: 1,
+    cap: null,
+    detail: '无显著降水信号，低能见度更宜按平流雾条件解读。',
+    weatherCode: code >= 0 ? code : null,
+    precipMm: p
+  }
+}
+
+function applyRainFogAdjustment(rawProb, ctx) {
+  let adj = Math.round(rawProb * ctx.multiplier)
+  if (ctx.cap != null) adj = Math.min(adj, ctx.cap)
+  return Math.max(0, Math.min(100, adj))
+}
+
+/** 将 current 中降水折算为约 mm/h（Open-Meteo current 常带 interval 秒） */
+function currentPrecipAsMmPerHour(current) {
+  if (!current || current.precipitation == null || Number.isNaN(current.precipitation)) return 0
+  const sec = current.interval && current.interval > 0 ? current.interval : 3600
+  return current.precipitation * (3600 / sec)
+}
+
 /**
  * 将风向角度转换为方向文字
  */
@@ -72,6 +210,8 @@ function calculateMidCloudRetreatBonus(hourlyMidCloud, currentIdx) {
  * @param {number} [targetIdx] - 指定小时索引（历史模式），省略则自动匹配当前时间
  */
 export function calculateFogProbability(current, hourly, targetIdx) {
+  const origCurrent = current
+
   if (targetIdx !== undefined && hourly) {
     current = {
       temperature_2m: hourly.temperature_2m[targetIdx],
@@ -341,13 +481,30 @@ export function calculateFogProbability(current, hourly, targetIdx) {
   // 计算逐小时概率（历史模式从0开始，实时模式从当前小时开始）
   const hourlyProbabilities = calculateHourlyProbabilities(hourly, targetIdx !== undefined ? 0 : undefined)
 
-  // 确定概率等级
+  const rawFogProbability = probability
+  const pHour = hourlyPrecipitationMm(hourly, currentIdx)
+  const pFromCurrent = targetIdx === undefined ? currentPrecipAsMmPerHour(origCurrent) : 0
+  const precipMm = Math.max(pHour, pFromCurrent)
+  const wcNow = hourlyWeatherCode(hourly, currentIdx, origCurrent)
+  const weatherContext = classifyRainVsFog(wcNow, precipMm)
+  probability = applyRainFogAdjustment(rawFogProbability, weatherContext)
+
+  if (weatherContext.multiplier < 0.99) {
+    conditions.push({
+      name: '降水与雾区分',
+      detail: weatherContext.detail,
+      status: weatherContext.dominant === 'rain' ? 'partial' : 'partial',
+      icon: weatherContext.dominant === 'rain' ? '☔' : '○'
+    })
+  }
+
+  // 确定概率等级（按降水修正后的指数）
   let level, description, levelText
-  if (probability >= 70) {
+  if (probability >= FOG_PROB_HIGH_MIN) {
     level = 'high'
     levelText = '高概率'
     description = '当前气象条件非常有利于平流雾的形成。建议关注交通状况，出行时注意安全。'
-  } else if (probability >= 45) {
+  } else if (probability >= FOG_PROB_MEDIUM_MIN) {
     level = 'medium'
     levelText = '中概率'
     description = '存在一定的平流雾形成可能。部分气象条件满足要求，建议持续关注天气变化。'
@@ -357,8 +514,16 @@ export function calculateFogProbability(current, hourly, targetIdx) {
     description = '当前气象条件不太有利于平流雾形成。天气条件可能随时变化，建议定期查看更新。'
   }
 
+  if (weatherContext.dominant === 'rain' && ['light', 'moderate', 'heavy'].includes(weatherContext.rainLevel)) {
+    description = '【区分降雨】模型指示有降水，能见度下降请优先结合降雨判断。以下为降水修正后的平流雾参考指数。' + description
+  } else if (weatherContext.rainLevel === 'trace') {
+    description = '【微量降水】与雾环境接近，指数已略作保守处理。' + description
+  }
+
   return {
     probability,
+    rawFogProbability,
+    weatherContext,
     level,
     levelText,
     description,
@@ -468,16 +633,24 @@ function calculateHourlyProbabilities(hourly, overrideStart) {
       prob += calculateMidCloudRetreatBonus(hourly.cloud_cover_mid, idx)
     }
 
-    // 确定等级
+    const rawProb = Math.min(100, prob)
+    const precipH = hourlyPrecipitationMm(hourly, idx)
+    const wcH = hourlyWeatherCode(hourly, idx, null)
+    const ctxH = classifyRainVsFog(wcH, precipH)
+    const adjProb = applyRainFogAdjustment(rawProb, ctxH)
+
     let level = 'low'
-    if (prob >= 70) level = 'high'
-    else if (prob >= 45) level = 'medium'
+    if (adjProb >= FOG_PROB_HIGH_MIN) level = 'high'
+    else if (adjProb >= FOG_PROB_MEDIUM_MIN) level = 'medium'
 
     probabilities.push({
       time: hourly.time[idx],
       hour: hour,
       dataIndex: idx,
-      probability: Math.min(100, prob),
+      probability: adjProb,
+      rawFogProbability: rawProb,
+      phenomenonDominant: ctxH.dominant,
+      rainLevel: ctxH.rainLevel,
       level
     })
   }
@@ -594,6 +767,15 @@ export function generateForecastSummary(hourlyProbabilities) {
       title: '关注：有雾形成条件',
       message: `${pad(main.startHour)}:00 至 ${pad(main.endHour)}:00 持续${main.hours}小时中概率（峰值${main.peakProb}%）`,
       icon: '☁️'
+    }
+  }
+
+  const first = hourlyProbabilities[0]
+  if (first && first.phenomenonDominant === 'rain' && ['light', 'moderate', 'heavy'].includes(first.rainLevel) && alert) {
+    alert = {
+      ...alert,
+      title: '降雨为主 · ' + alert.title,
+      message: '请先判断能见度是否由降雨引起；以下为降水修正后的雾参考。' + alert.message
     }
   }
 

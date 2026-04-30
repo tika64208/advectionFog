@@ -6,6 +6,12 @@
     <text class="coordinates">{{latStr}}°N, {{lonStr}}°E</text>
   </view>
 
+  <!-- 降雨 vs 平流雾说明（模型有降水时） -->
+  <view class="weather-context card" wx:if="{{resultData.prediction.weatherContext && resultData.prediction.weatherContext.dominant === 'rain'}}">
+    <text class="wc-line"><text class="wc-icon">☔</text> 降雨为主：{{resultData.prediction.weatherContext.detail}}</text>
+    <text class="wc-sub" wx:if="{{resultData.prediction.rawFogProbability != null}}">未修正雾指数约 {{resultData.prediction.rawFogProbability}}%，已按降水下调展示。</text>
+  </view>
+
   <!-- 雾预测结果 -->
   <view class="prediction-card card {{resultData.prediction.level}}">
     <view class="status-row">

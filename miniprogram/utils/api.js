@@ -141,8 +141,8 @@ export function fetchWeatherData(lat, lon) {
   return new Promise((resolve, reject) => {
     wx.request({
       url: `${OPEN_METEO_API}?latitude=${lat}&longitude=${lon}` +
-        `&current=temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,surface_pressure,cloud_cover` +
-        `&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,visibility,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high` +
+        `&current=temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,surface_pressure,cloud_cover,precipitation,rain,showers,weather_code` +
+        `&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,visibility,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,precipitation,rain,showers,weather_code` +
         `&timezone=auto&forecast_days=2`,
       method: 'GET',
       timeout: REQUEST_TIMEOUT,

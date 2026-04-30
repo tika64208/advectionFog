@@ -2,6 +2,7 @@
  * 概率地图页 - 显示附近区域的平流雾概率分布
  */
 import { fetchBatchWeatherData, reverseGeocode } from '../../utils/api'
+import { FOG_PROB_HIGH_MIN, FOG_PROB_MEDIUM_MIN } from '../../utils/fog-calculator'
 
 Page({
   data: {
@@ -217,8 +218,8 @@ Page({
       const probability = this.calculateFogProbability(temp, dewpoint, humidity, windSpeed)
       
       let level = 'low'
-      if (probability >= 70) level = 'high'
-      else if (probability >= 45) level = 'medium'
+      if (probability >= FOG_PROB_HIGH_MIN) level = 'high'
+      else if (probability >= FOG_PROB_MEDIUM_MIN) level = 'medium'
       
       return {
         ...point,
@@ -271,11 +272,11 @@ Page({
       // 根据概率计算颜色（使用十六进制 #RRGGBBAA 格式，真机兼容）
       let fillColor, strokeColor
       
-      if (prob >= 70) {
+      if (prob >= FOG_PROB_HIGH_MIN) {
         // 高风险：红色
         fillColor = '#ef444480'  // 红色 50% 透明
         strokeColor = '#ef4444'
-      } else if (prob >= 45) {
+      } else if (prob >= FOG_PROB_MEDIUM_MIN) {
         // 中风险：橙色
         fillColor = '#fb924270'  // 橙色 44% 透明
         strokeColor = '#fb9242'
